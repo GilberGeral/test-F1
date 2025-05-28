@@ -15,7 +15,11 @@ class HomeController extends Controller {
   }
 
   public function listarRegistros() {
-    return view('listar_registros');
+    $registros =[];
+    $sql = 'SELECT IdMask AS Mask,IdInFile AS Id,Nombre,Descripcion,Origin AS Origen, created_at, updated_at FROM registros ORDER BY Id ASC';
+    $registros = DB::select($sql);
+    return view('listar_registros',compact('registros'));
+    
   }
 
   public function cargarRegistros() {
@@ -23,6 +27,16 @@ class HomeController extends Controller {
     return view('cargar_registros');
   }
 
+  public function obtenerListado(Request $request) {
+   
+    $sql = 'SELECT IdMask AS Mask,IdInFile AS Id,Nombre,Descripcion,Origin AS Origen, created_at, updated_at FROM registros ORDER BY Id ASC';
+    $this->response["data"] = DB::select($sql);
+    $this->response["done"] = true;
+    $this->response["msg"] = "DEFAULT";
+    $this->response["code"] = 200;
+    return json_encode($this->response);
+    
+  }
   public function cargarRegistrosCSV(Request $request) {
     $request->validate([
       'fileSVG' => 'required|file|mimes:csv,txt',
@@ -31,19 +45,14 @@ class HomeController extends Controller {
 
     $archivo = $request->file('fileSVG');
     $opcion = $request->input('opcion');
-    error_log('opcion carga es ' . $opcion);
-    // Nombre original
+    
     $nombreOriginal = $archivo->getClientOriginalName();
 
-    // Extensión (sin el punto, ej: csv)
     $extension = $archivo->getClientOriginalExtension();
 
-    // Nuevo nombre generado con tu función
     $nuevoNombre = $this->createCode(16) . '.' . $extension;
     $archivo->storeAs('csv', $nuevoNombre, 'local');
-    // $this->setTime();
-
-    //cargar el CSV y parsearlo... 
+    
     $rutaArchivo = storage_path('app/csv/' . $nuevoNombre);
 
     if (!file_exists($rutaArchivo)) {

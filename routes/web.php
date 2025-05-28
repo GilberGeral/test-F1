@@ -17,3 +17,4 @@ Route::get('/', [HomeController::class, 'listarRegistros']);
 Route::get('/listar', [HomeController::class, 'listarRegistros']);
 Route::get('/cargar', [HomeController::class, 'cargarRegistros']);
 Route::post('/cargar_csv', [HomeController::class, 'cargarRegistrosCSV']);
+Route::post('/listar_registros', [HomeController::class, 'obtenerListado']);

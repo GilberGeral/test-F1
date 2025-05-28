@@ -1,12 +1,111 @@
 /*!
-    * Start Bootstrap - SB Admin v7.0.7 (https://startbootstrap.com/template/sb-admin)
-    * Copyright 2013-2023 Start Bootstrap
-    * Licensed under MIT (https://github.com/StartBootstrap/startbootstrap-sb-admin/blob/master/LICENSE)
-    */
+  * Start Bootstrap - SB Admin v7.0.7 (https://startbootstrap.com/template/sb-admin)
+  * Copyright 2013-2023 Start Bootstrap
+  * Licensed under MIT (https://github.com/StartBootstrap/startbootstrap-sb-admin/blob/master/LICENSE)
+  */
 // 
+let rechazados = [];
+let razones = [];
+let view = '';
+let listado=[];
+
+function renderTable(  ){
+  console.log( "en reeder table" );
+  //1- extraer nombres de columnas 
+  
+  let _cols = ['Opciones'];
+  $.each(listado[0], function (_key, _val) {
+    if( _key != "Mask" ){
+      _cols.push(_key);
+    }    
+  });
+  let _str = `<thead>`;
+  _cols.forEach(_col => {
+    _str += `<th> ${_col} </th>`;
+  });
+  _str += `</thead> <tbody>`;
+  
+
+  listado.forEach(_fila => {
+    _str += `<tr>`;
+    $.each(_fila, function (_key, _val) {
+      if( _key == "Mask" ){
+        let _botones = `<a href="javascript:void(0)" class="btn btn-outline-danger btn-sm" onclick="borrar('${_val}')"><i class="fas fa-trash"></i></a>
+        <a href="javascript:void(0)" class="btn btn-outline-info btn-sm" onclick="editar('${_val}')"><i class="fas fa-pencil"></i></a>`;
+         _str += `<td>${_botones}</td>`;
+      }else{
+        _str += `<td>${_val}</td>`;
+      }
+
+     
+    });
+    _str += `</tr>`;
+  });
+  _str += `</tbody>`;
+  $("#myTable").html(_str);
+
+  setTimeout(() => {
+
+    $('#myTable').DataTable({
+      pageLength: 50,
+      ordering: true,
+      dom: 'Bfrtip',
+      buttons: [
+        {
+          extend: 'excel',
+          text: 'Exportar a Excel ..',
+          title: 'Registros',
+          className: 'btn btn-info btn-sm'
+        }
+      ],
+      
+      language: {
+        url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+      }
+    });
+
+    
+  }, 200);
+  
+
+}
+
+function cargarRegistros(){
+  $.ajax({
+    url: 'listar_registros', // Ruta POST en tu backend
+    method: 'POST',
+    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+    data: {},
+    contentType: false,
+    processData: false,
+    success: function(_resp) {
+      console.log("Listado:");
+      let _res = JSON.parse(_resp);
+      console.log( _res );
+      listado = _res.data;
+      setTimeout(() => {
+        renderTable();
+      }, 500);
+    },
+    error: function ( _error ) {
+      console.error("Error al cargar el listado:");
+      console.log( _error );
+      bootbox.alert({
+        message: "Error al cargar el listado.",
+        centerVertical: true
+      });
+    }
+  });
+
+}//fin de cargar registros
 
 window.addEventListener('DOMContentLoaded', event => {
-
+  
+  view =  window.location.pathname.split('/')[1];
+  
+  if( view == 'listar' ){
+    cargarRegistros();    
+  }
   // Toggle the side navigation
   const sidebarToggle = document.body.querySelector('#sidebarToggle');
   if (sidebarToggle) {
@@ -20,11 +119,10 @@ window.addEventListener('DOMContentLoaded', event => {
 
 });
 
-let rechazados = [];
-let razones = [];
+
 function cargarArchivo(){
   let valorSeleccionado = $('input[name="opcion"]:checked').val();
-  console.log( "opcion es ", valorSeleccionado );
+  
   if( valorSeleccionado == undefined ){
     bootbox.alert({
       message: "Debes seleccionar una opción de carga!",
@@ -105,3 +203,11 @@ function cargarArchivo(){
 
 
 }//fin de cargar archivo csv
+
+function borrar( _cual ){
+  console.log( "borrar registro "+_cual );
+}
+
+function editar( _cual ){
+  console.log( "editar registro "+_cual );
+}
