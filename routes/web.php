@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\HomeController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -13,5 +13,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () { return view('welcome'); });
-Route::get('/holi', function () { return view('load_file'); });
+Route::get('/', [HomeController::class, 'listarRegistros']);
+Route::get('/listar', [HomeController::class, 'listarRegistros']);
+Route::get('/cargar', [HomeController::class, 'cargarRegistros']);
+Route::post('/cargar_csv', [HomeController::class, 'cargarRegistrosCSV']);
