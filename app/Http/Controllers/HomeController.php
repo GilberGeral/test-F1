@@ -15,12 +15,26 @@ class HomeController extends Controller {
   }
 
   public function listarRegistros() {
-    return view('listar_registros');
+    $registros =[];
+    $sql = 'SELECT IdMask AS Mask,IdInFile AS Id,Nombre,Descripcion,Origin AS Origen, created_at, updated_at FROM registros ORDER BY Id ASC';
+    $registros = DB::select($sql);
+    return view('listar_registros',compact('registros'));    
   }
 
   public function cargarRegistros() {
 
     return view('cargar_registros');
+  }
+
+  public function obtenerListado(Request $request) {
+   
+    $sql = 'SELECT IdMask AS Mask,IdInFile AS Id,Nombre,Descripcion,Origin AS Origen, created_at, updated_at FROM registros ORDER BY Id ASC';
+    $this->response["data"] = DB::select($sql);
+    $this->response["done"] = true;
+    $this->response["msg"] = "DEFAULT";
+    $this->response["code"] = 200;
+    return json_encode($this->response);
+    
   }
 
   public function cargarRegistrosCSV(Request $request) {
@@ -31,19 +45,14 @@ class HomeController extends Controller {
 
     $archivo = $request->file('fileSVG');
     $opcion = $request->input('opcion');
-    error_log('opcion carga es ' . $opcion);
-    // Nombre original
+    
     $nombreOriginal = $archivo->getClientOriginalName();
 
-    // Extensión (sin el punto, ej: csv)
     $extension = $archivo->getClientOriginalExtension();
 
-    // Nuevo nombre generado con tu función
     $nuevoNombre = $this->createCode(16) . '.' . $extension;
     $archivo->storeAs('csv', $nuevoNombre, 'local');
-    // $this->setTime();
-
-    //cargar el CSV y parsearlo... 
+    
     $rutaArchivo = storage_path('app/csv/' . $nuevoNombre);
 
     if (!file_exists($rutaArchivo)) {
@@ -182,6 +191,112 @@ class HomeController extends Controller {
     $this->response["data"]["rechazados"] = $dataRejected;
     $this->response["data"]["messages"] = $dataMessages;
 
+    return json_encode($this->response);
+  }
+
+  public function crearRegistro(Request $request) {
+    error_log('algo a borrar ');
+    $request->validate([
+      'IdInFile' => 'required|integer',
+      'Nombre' => 'required|string|max:50',
+      'Descripcion' => 'required|string|max:500'      
+    ]);
+
+    $data = $request->all();
+
+    //ya existe por ID ? 
+    $registro = Registro::where('IdInFile',$data['IdInFile'])->first();
+    if( $registro != null ){
+      $this->response["done"] = false;
+      $this->response["msg"] = "Ya existe un registro con ese ID";
+      $this->response["code"] = 401;
+      return json_encode($this->response);
+    }
+    
+    $registro = new Registro();
+    $registro->IdMask = $this->createHash();
+    $registro->IdInFile = $data['IdInFile'];
+    $registro->Nombre = $data['Nombre'];
+    $registro->Descripcion = $data['Descripcion'];
+    $registro->Origin = Constantes::ORIGIN_FORM;
+    $registro->created_at = $this->now_formatted;
+
+    try {
+      //code...
+      $registro->save();
+      $this->response["done"] = true;
+      $this->response["msg"] = "Registro creado";
+      $this->response["code"] = 200;  
+    } catch (\Throwable $th) {
+      //throw $th;
+      $code = $th->getCode();
+      $msg = $th->getMessage();
+      error_log('error al intentar esto code : '.$code.', msg : '.$msg);
+      $this->response["done"] = false;
+      $this->response["msg"] = $msg;
+      $this->response["code"] = 401;
+    }
+    
+    return json_encode($this->response);
+  }
+
+  public function actualizarRegistro(Request $request) {
+    error_log('algo a borrar ');
+    $request->validate([
+      'Mask' => 'required|string|size:16',
+      'IdInFile' => 'required|integer',
+      'Nombre' => 'required|string|max:50',
+      'Descripcion' => 'required|string|max:500'      
+    ]);
+
+    $data = $request->all();
+
+    // existe  ? 
+    $registro = Registro::where('IdMask',$data['Mask'])->first();
+    if( $registro == null ){
+      $this->response["done"] = false;
+      $this->response["msg"] = "No se encontró el registro para ser actualizado";
+      $this->response["code"] = 401;
+      return json_encode($this->response);
+    }
+
+    $registro->IdInFile = $data['IdInFile'];
+    $registro->Nombre = $data['Nombre'];
+    $registro->Descripcion = $data['Descripcion'];
+    $registro->Origin = Constantes::ORIGIN_FORM;
+    $registro->updated_at = $this->now_formatted;
+
+    try {
+      //code...
+      $registro->save();
+      $this->response["done"] = true;
+      $this->response["msg"] = "Registro actualizado correctamente";
+      $this->response["code"] = 200;  
+    } catch (\Throwable $th) {
+      //throw $th;
+      $code = $th->getCode();
+      $msg = $th->getMessage();
+      error_log('error al intentar esto code : '.$code.', msg : '.$msg);
+      $this->response["done"] = false;
+      $this->response["msg"] = $msg;
+      $this->response["code"] = 401;
+    }
+    
+    return json_encode($this->response);
+  }
+
+  public function borrarRegistro(Request $request) {
+    error_log('algo a borrar ');
+    $request->validate([
+      'registro' => 'required|string|size:16',
+    ]);
+
+    $registro = $request->input('registro');
+
+    DB::table('registros')->where('IdMask',$registro)->delete();
+    $this->response["done"] = true;
+    $this->response["msg"] = "Registro borrado";
+    $this->response["code"] = 200;  
     return json_encode($this->response);
   }
 }//fin del controller
