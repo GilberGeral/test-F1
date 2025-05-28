@@ -30,7 +30,7 @@
               <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
               <li class="breadcrumb-item active">Listar registros</li>
             </ol>
-            <a href="javascript:void(0)" class="btn btn-warning btn-sm">
+            <a href="javascript:void(0)" class="btn btn-warning btn-sm" onclick="abrirModalCreate()">
               Crear nuevo registro
             </a>
           </div>
@@ -50,6 +50,8 @@
       </main>
       @include('snippets.footer')
     </div>
+
+    @include('snippets.modal_create')
   </div>
   <script src="{{ asset('template') }}/js/bootstrap.bundle.min.js" ></script>
   <script src="{{ asset('template') }}/js/jquery-3.7.1.min.js" ></script>  

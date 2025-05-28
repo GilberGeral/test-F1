@@ -42,8 +42,8 @@ class Controller extends BaseController{
   
   }
 
-  public function createHash(  ){
-    $r = random_bytes(5);
+  public function createHash(){
+    $r = random_bytes(8);
     return bin2hex($r);
   }
 
