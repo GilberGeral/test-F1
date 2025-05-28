@@ -73,7 +73,7 @@ function renderTable() {
 
 function cargarRegistros() {
   $.ajax({
-    url: 'listar_registros', // Ruta POST en tu backend
+    url: 'listar_registros',
     method: 'POST',
     headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
     data: {},
